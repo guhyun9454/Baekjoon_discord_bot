@@ -1,3 +1,5 @@
+from get_data import *
+
 def get_user_value(user_id):
     try:
         with open("user.txt", "r") as file:
@@ -14,6 +16,10 @@ def get_user_value(user_id):
 
 def update_user_value(user_id, new_value):
     try:
+        link = "https://www.acmicpc.net/user/" + new_value
+        if baekjoon(link).find("span","error-v1-title"): #아이디 존재 안하면 None 을 return
+            return None
+        
         lines = []
         updated = False
         
@@ -30,14 +36,12 @@ def update_user_value(user_id, new_value):
                     file.write(line)
         
         if updated:
-            print(f"User value for ID {user_id} updated to {new_value}successfully.")
+            print(f"User value for ID {user_id} updated to {new_value} successfully.")
         else:
             print(f"No user with ID {user_id} found.")
             with open("user.txt", "a") as file:
                 file.write(f"{user_id}:{new_value}\n")
             print(f"User value for ID {user_id}: {new_value} saved successfully.")
+        return 1
     except Exception as e:
         print(e)
-
-
-

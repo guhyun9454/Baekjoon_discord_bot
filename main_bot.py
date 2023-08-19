@@ -8,7 +8,6 @@ import asyncio
 from functions import *
 from user_check import *
 
-# user_data = {294113106022367232: 'guhyun9454', 520202815776227348: 'harken12', 771879794681577482: 'harken12'}
 token = 'MTEzODc0MTk2NjkyMjg0NjIzOA.GWpSql.yaWRnXRgzVWPZeNVjZHpohdIpaGWoeZEBgTMGg'
 
 client = discord.Client(intents=discord.Intents.all())
@@ -31,15 +30,12 @@ async def today_command(interaction, baekjoon_id: str = None):
     if baekjoon_id == None: #id가 입력되지 않으면 저장된 데이터에서 찾아봄
         find = get_user_value(interaction.user.id)
         if find == None:
-            await interaction.response.send_message("등록되지 않은 사용자입니다. /등록 기능을 이용하여 백준 아이디를 등록하여 주세요.")
+            embed=discord.Embed(title=f"{interaction.user} 님의 백준 아이디는 등록되어 있지 않습니다.", description="/등록 명령어를 사용하여 백준 아이디를 등록하여 주세요.")
+            await interaction.response.send_message(embed = embed)
             return
         else:
             baekjoon_id= find
-        # if interaction.user.id in user_data:
-        #     baekjoon_id = user_data[interaction.user.id]
-        # else:
-        #     await interaction.response.send_message("유저 id를 입력하세요!")
-        #     return
+
     try:
         embed = today_baekjoon(baekjoon_id) 
         await interaction.response.send_message(embed=embed)
@@ -49,7 +45,9 @@ async def today_command(interaction, baekjoon_id: str = None):
 
 @tree.command(name="등록", description="백준 아이디를 등록합니다. 이미 등록되어 있을 경우 새로운 값으로 업데이트됩니다.",guild=discord.Object(id=1110101899312631808))
 async def baekjoon_id_register(interaction, baekjoon_id: str):
-    update_user_value(interaction.user.id,baekjoon_id)
+    if update_user_value(interaction.user.id,baekjoon_id) == None:
+            await interaction.response.send_message(f"{baekjoon_id} 는 없는 아이디입니다. 다시 입력해 주세요.")
+            return
     await interaction.response.send_message(f"{interaction.user}님, 백준아이디 : {baekjoon_id}가 성공적으로 등록되었습니다!")
 
 
