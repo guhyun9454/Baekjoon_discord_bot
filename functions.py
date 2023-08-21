@@ -15,8 +15,11 @@ tier_data = {0: ['Unrated'], 1: ['Bronze', 'V'], 2: ['Bronze', 'IV'], 3: ['Bronz
              25: ['Diamond', 'I'], 26: ['Ruby', 'V'], 27: ['Ruby', 'IV'], 28: ['Ruby', 'III'], 29: ['Ruby', 'II'], 
              30: ['Ruby', 'I']}
 
-def today_baekjoon(id: str): #백준 아이디를 입력받으면 오늘 푼 문제를 return
-    link = "https://www.acmicpc.net/status?user_id="+id+"&language_id=-1&result_id=4s"
+def today_baekjoon(id: str,틀린문제표기): #백준 아이디를 입력받으면 오늘 푼 문제를 return
+    if 틀린문제표기:
+        link = "https://www.acmicpc.net/status?user_id="+id
+    else:
+        link = "https://www.acmicpc.net/status?user_id="+id+"&result_id=4"
     sum = 0
     page = requests.get(link , headers={"User-Agent": "Mozilla/5.0"})
     soup = BeautifulSoup(page.text, "html.parser")
@@ -57,20 +60,20 @@ def today_baekjoon(id: str): #백준 아이디를 입력받으면 오늘 푼 문
             if start_boundary <= datetime_prob and datetime_prob <= end_boundary:
                 if "result-ac" in str(prob_list[i].find_all("td")[3]):
                     sum += 1
-                    submit_id = prob_list[i].find_all("td")[0].text
-                    prob_id = prob_list[i].find_all("td")[2].text
-                    prob_title = prob_list[i].find_all("td")[2].find("a")["title"]
-                    memory = prob_list[i].find_all("td")[4].text
-                    ms = prob_list[i].find_all("td")[5].text
-                    lang = prob_list[i].find_all("td")[6].text
-                    length = prob_list[i].find_all("td")[7].text
-                    solved_time = prob_list[i].find_all("td")[8].text
-                    temp1 = prob_id + " - "+prob_title +" ("+solved_time+")"
-                    temp2 = "메모리: " + memory + " KB, 시간: " + ms + " ms, 언어: " + lang + " [문제](https://www.acmicpc.net/problem/"+prob_id+")" +" / "+ " [코드](https://www.acmicpc.net/source/"+submit_id+")"
-                    embed.add_field(name = temp1, value = temp2, inline = False)
+                submit_id = prob_list[i].find_all("td")[0].text
+                prob_id = prob_list[i].find_all("td")[2].text
+                prob_title = prob_list[i].find_all("td")[2].find("a")["title"]
+                memory = prob_list[i].find_all("td")[4].text
+                ms = prob_list[i].find_all("td")[5].text
+                lang = prob_list[i].find_all("td")[6].text
+                length = prob_list[i].find_all("td")[7].text
+                solved_time = prob_list[i].find_all("td")[8].text
+                temp1 = prob_id + " - "+prob_title +" ("+solved_time+")"
+                temp2 = "메모리: " + memory + " KB, 시간: " + ms + " ms, 언어: " + lang + " [문제](https://www.acmicpc.net/problem/"+prob_id+")" +" / "+ " [코드](https://www.acmicpc.net/source/"+submit_id+")"
+                embed.add_field(name = temp1, value = temp2, inline = False)
             else:
                 break
-        if sum == 0:
+        if sum == 0 and 틀린문제표기 == False:
             embed.add_field(name="정말로 한 문제도 안 푸셨네요" , value="문제 추천은 /랜덤 기능을 이용해 주세요" , inline=False)
         embed.set_footer(text="성공한 문제: "+str(sum) + ", 스트라이크: 연속 "+str(strike)+"일")
         return embed

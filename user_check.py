@@ -16,8 +16,7 @@ def get_user_value(user_id):
 
 def update_user_value(user_id, new_value):
     try:
-        link = "https://www.acmicpc.net/user/" + new_value
-        if baekjoon(link).find("span","error-v1-title"): #아이디 존재 안하면 None 을 return
+        if check_baekjoon_id(new_value) == False:
             return None
         
         lines = []
@@ -45,3 +44,10 @@ def update_user_value(user_id, new_value):
         return 1
     except Exception as e:
         print(e)
+
+def check_baekjoon_id(baekjoon_id):
+    link = "https://www.acmicpc.net/user/" + baekjoon_id
+    if baekjoon(link).find("span","error-v1-title"): #아이디 존재 안하면 false 을 return
+        return False
+    else:
+        return True
