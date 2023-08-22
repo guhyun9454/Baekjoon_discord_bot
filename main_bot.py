@@ -56,7 +56,8 @@ async def on_ready():
     틀린문제표기 = "성공하지 못한 문제 표기할지 말지 선택합니다. 기본값은 False입니다."
  )
 async def today_command(interaction, baekjoon_id: str = None,틀린문제표기: bool = False):
-    print(f"{interaction.guild}(id:{interaction.guild_id}) 에서 {interaction.user}(id:{interaction.id})이 {interaction.command.name} 명령어를 사용")
+    print(f"{interaction.guild}(id:{interaction.guild_id}) 에서 {interaction.user}(id:{interaction.id}): {interaction.command.name}, ",end="")
+    print([f"{i['name']}: {i['value']}" for i in interaction.data["options"]])
     try:
         if baekjoon_id == None: #id가 입력되지 않으면 저장된 데이터에서 찾아봄
             find = get_user_value(interaction.user.id)
@@ -79,7 +80,8 @@ async def today_command(interaction, baekjoon_id: str = None,틀린문제표기:
 
 @tree.command(name="등록", description="백준 아이디를 등록합니다. 이미 등록되어 있을 경우 새로운 값으로 업데이트됩니다.",guild=guild)
 async def baekjoon_id_register(interaction, baekjoon_id: str):
-    print(f"{interaction.guild}(id:{interaction.guild_id}) 에서 {interaction.user}(id:{interaction.id})이 {interaction.command.name} 명령어를 사용")
+    print(f"{interaction.guild}(id:{interaction.guild_id}) 에서 {interaction.user}(id:{interaction.id}): {interaction.command.name}, ",end="")
+    print([f"{i['name']}: {i['value']}" for i in interaction.data["options"]])
     try:
         if update_user_value(interaction.user.id,baekjoon_id) == None:
                 await interaction.response.send_message(embed = error_maker(1,baekjoon_id))
@@ -100,7 +102,8 @@ async def baekjoon_id_register(interaction, baekjoon_id: str):
     algorithm='알고리즘을 표시할지 말지 선택합니다. 기본값은 False입니다.'
  )
 async def 문제(interaction, id: str, tier: bool = False, algorithm: bool = False):
-    print(f"{interaction.guild}(id:{interaction.guild_id}) 에서 {interaction.user}(id:{interaction.id})이 {interaction.command.name} 명령어를 사용")
+    print(f"{interaction.guild}(id:{interaction.guild_id}) 에서 {interaction.user}(id:{interaction.id}): {interaction.command.name}, ",end="")
+    print([f"{i['name']}: {i['value']}" for i in interaction.data["options"]])
     try:
         file, embed = find_prob_by_id(id, tier, algorithm)
         await interaction.response.send_message(file=file, embed=embed)
@@ -118,7 +121,8 @@ async def 문제(interaction, id: str, tier: bool = False, algorithm: bool = Fal
     한국어 = "한국어 문제만 추천할지 선택합니다. 기본값은 True입니다."
  )
 async def 랜덤(interaction,범위: str,tier: bool = False, algorithm: bool = False,한국어: bool = True):
-    print(f"{interaction.guild}(id:{interaction.guild_id}) 에서 {interaction.user}(id:{interaction.id})이 {interaction.command.name} 명령어를 사용")
+    print(f"{interaction.guild}(id:{interaction.guild_id}) 에서 {interaction.user}(id:{interaction.id}): {interaction.command.name}, ",end="")
+    print([f"{i['name']}: {i['value']}" for i in interaction.data["options"]])
     try:
         범위 = 범위.replace(" ","")
         범위 = 범위.split(",")
