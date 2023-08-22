@@ -11,8 +11,8 @@ from user_check import *
 token = 'MTEzODc0MTk2NjkyMjg0NjIzOA.GWpSql.yaWRnXRgzVWPZeNVjZHpohdIpaGWoeZEBgTMGg'
 error_red = 0xf44336 
 noerror_green = 0x388e3c
-# guild=discord.Object(id=1110101899312631808)
-guild = None
+guild=discord.Object(id=1110101899312631808)
+# guild = None
 
 client = discord.Client(intents=discord.Intents.all())
 tree = app_commands.CommandTree(client)
@@ -24,17 +24,19 @@ def error_maker(error_type: int = 0,*args):
     1: 백준 아이디 존재 안함 , *args = (baekjoon_id,)
     2: 디스코드 식별번호에 대응하는 백준 아이디가 존재 하지 않음, *args = (interation.user,)
     3: exception error, *args = (e,)
+    4: 올바르지 않은 티어 범위 *args = (잘못된 범위,)
     """
     if error_type == 0: 
         embed=discord.Embed(title=f"에러", description="에러가 발생했습니다.",color=error_red)
     elif error_type == 1:
-        embed=discord.Embed(title=f"404 NOT FOUND", description=f"{args[0]} 은/는 존재하지 않는 백준 아이디입니다. \n다시 입력해 주세요.",color=error_red)
+        embed=discord.Embed(title=f"'{args[0]}' 은/는 존재하지 않는 백준 아이디입니다.", description=f"다시 입력해 주세요.",color=error_red)
     elif error_type == 2: 
-        embed=discord.Embed(title=f"{args[0]} 님의 백준 아이디는 등록되어 있지 않습니다.", description="/등록 명령어를 사용하여 백준 아이디를 등록하여 주세요.",color=error_red)
+        embed=discord.Embed(title=f"'{args[0]}' 님의 백준 아이디는 등록되어 있지 않습니다.", description="/등록 명령어를 사용하여 백준 아이디를 등록하여 주세요.",color=error_red)
     elif error_type == 3: 
-        embed=discord.Embed(title=f"알 수 없는 에러가 발생했습니다. (일단 개발자 탓은 아님)", description=args[0],color=error_red)
+        embed=discord.Embed(title=f"코드 오류", description=args[0],color=error_red)
+    elif error_type == 4: 
+        embed=discord.Embed(title=f"'{args[0]}' 은/는 올바른 범위가 아닙니다.", description="올바른 범위를 입력해 주세요.",color=error_red)
     
-
     return embed
 
 
@@ -48,13 +50,13 @@ async def on_ready():
     )
 
 
-
 @tree.command(name="today", description="오늘 백준에서 푼 문제를 보여줍니다.",guild=guild)
 @app_commands.describe( 
     baekjoon_id = "검색하고 싶은 백준 아이디를 입력합니다. /등록 기능을 이용하시면 매번 자신의 아이디를 입력할 필요가 없습니다.",
     틀린문제표기 = "성공하지 못한 문제 표기할지 말지 선택합니다. 기본값은 False입니다."
  )
 async def today_command(interaction, baekjoon_id: str = None,틀린문제표기: bool = False):
+    print(f"{interaction.guild}(id:{interaction.guild_id}) 에서 {interaction.user}(id:{interaction.id})이 {interaction.command.name} 명령어를 사용")
     try:
         if baekjoon_id == None: #id가 입력되지 않으면 저장된 데이터에서 찾아봄
             find = get_user_value(interaction.user.id)
@@ -69,13 +71,15 @@ async def today_command(interaction, baekjoon_id: str = None,틀린문제표기:
             return
         embed = today_baekjoon(baekjoon_id,틀린문제표기) 
         await interaction.response.send_message(embed=embed)
+        return
     except Exception as e:
         await interaction.response.send_message(embed = error_maker(3,e))
         return
 
 
-@tree.command(name="등록", description="백준 아이디를 등록합니다. 이미 등록되어 있을 경우 새로운 값으로 업데이트됩니다.")
+@tree.command(name="등록", description="백준 아이디를 등록합니다. 이미 등록되어 있을 경우 새로운 값으로 업데이트됩니다.",guild=guild)
 async def baekjoon_id_register(interaction, baekjoon_id: str):
+    print(f"{interaction.guild}(id:{interaction.guild_id}) 에서 {interaction.user}(id:{interaction.id})이 {interaction.command.name} 명령어를 사용")
     try:
         if update_user_value(interaction.user.id,baekjoon_id) == None:
                 await interaction.response.send_message(embed = error_maker(1,baekjoon_id))
@@ -83,26 +87,48 @@ async def baekjoon_id_register(interaction, baekjoon_id: str):
         else:
             embed=discord.Embed(title=f"{interaction.user}님의 백준 아이디가 성공적으로 등록되었습니다!", description=f"아이디 : {baekjoon_id}",color=noerror_green)
             await interaction.response.send_message(embed=embed)
+            return
     except Exception as e:
             await interaction.response.send_message(embed = error_maker(3,e))
             return
 
-@tree.command(description="백준 문제를 찾아보는 명령어입니다. 티어와 알고리즘을 표기할 수 있습니다. ")
+
+@tree.command(name="문제",description="백준 문제를 찾아보는 명령어입니다. 티어와 알고리즘을 표기할 수 있습니다. ",guild=guild)
 @app_commands.describe( 
     id='백준 문제번호입니다.',
     tier='티어를 표시할지 말지 선택합니다. 기본값은 False입니다.',
-    algorithm='알고리즘을 표시할 지 말지 선택합니다. 기본값은 False입니다.'
+    algorithm='알고리즘을 표시할지 말지 선택합니다. 기본값은 False입니다.'
  )
 async def 문제(interaction, id: str, tier: bool = False, algorithm: bool = False):
+    print(f"{interaction.guild}(id:{interaction.guild_id}) 에서 {interaction.user}(id:{interaction.id})이 {interaction.command.name} 명령어를 사용")
     try:
-        if not id:
-            await interaction.response.send_message("문제 번호를 입력하세요!")
-            return
-            
         file, embed = find_prob_by_id(id, tier, algorithm)
         await interaction.response.send_message(file=file, embed=embed)
+        return
     except Exception as e:
         await interaction.response.send_message(embed = error_maker(3,e))
+        return
+
+
+@tree.command(name = "랜덤",description="랜덤으로 문제를 추천해 줍니다. 티어 범위를 설정할 수 있습니다.",guild=guild)
+@app_commands.describe(
+    범위 = "영문 첫 글자 + 숫자 (e.g. s4, g1) 혹은 영문 첫 글자 (e.g. b, s, g, p, d, r)를 쉼표로 구분하여 입력하여 주세요. (e.g. s, g4)",
+    tier='티어를 표시할지 말지 선택합니다. 기본값은 False입니다.',
+    algorithm='알고리즘을 표시할지 말지 선택합니다. 기본값은 False입니다.',
+    한국어 = "한국어 문제만 추천할지 선택합니다. 기본값은 True입니다."
+ )
+async def 랜덤(interaction,범위: str,tier: bool = False, algorithm: bool = False,한국어: bool = True):
+    print(f"{interaction.guild}(id:{interaction.guild_id}) 에서 {interaction.user}(id:{interaction.id})이 {interaction.command.name} 명령어를 사용")
+    try:
+        범위 = 범위.replace(" ","")
+        범위 = 범위.split(",")
+        범위 = tier_to_id(범위) #티어에 대응하는 id로 바꿈
+        prob_id = rand_problem(범위) #범위 내에서 문제를 랜덤으로 뽑아옴
+        file,embed = find_prob_by_id(prob_id,tier=tier,algorithm=algorithm) #문제를 출력함
+        await interaction.response.send_message(file=file, embed=embed)
+        return
+    except Exception as e: 
+        await interaction.response.send_message(embed = error_maker(4,str(e)))
         return
 
 
@@ -145,16 +171,16 @@ async def on_message(message):
     #         file,embed = find_prob_by_id(prob_num,tier,algorithm)
     #         await message.channel.send(file = file,embed=embed)
 
-    elif message.content.startswith("/랜덤"):
-        try:
-            tier_list = message.content.replace("/랜덤","")
-            tier_list = tier_list.replace(" ","")
-            tier_list = tier_list.split(",")
-            tier_list = tier_to_id(tier_list)
-            file,embed = rand_problem(tier_list)
-            await message.channel.send(file = file,embed=embed)
-        except Exception as e:
-            await message.channel.send(str(e))
+    # elif message.content.startswith("/랜덤"):
+    #     try:
+    #         tier_list = message.content.replace("/랜덤","")
+    #         tier_list = tier_list.replace(" ","")
+    #         tier_list = tier_list.split(",")
+    #         tier_list = tier_to_id(tier_list)
+    #         file,embed = rand_problem(tier_list)
+    #         await message.channel.send(file = file,embed=embed)
+    #     except Exception as e:
+    #         await message.channel.send(str(e))
     
     elif message.content.startswith("마법소녀GH99님"):
         await message.channel.send(":emoji_1:")
