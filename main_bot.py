@@ -11,8 +11,8 @@ from user_check import *
 token = 'MTEzODc0MTk2NjkyMjg0NjIzOA.GWpSql.yaWRnXRgzVWPZeNVjZHpohdIpaGWoeZEBgTMGg'
 error_red = 0xf44336 
 noerror_green = 0x388e3c
-guild=discord.Object(id=1110101899312631808)
-# guild = None
+# guild=discord.Object(id=1110101899312631808)
+guild = None
 
 client = discord.Client(intents=discord.Intents.all())
 tree = app_commands.CommandTree(client)
@@ -56,8 +56,7 @@ async def on_ready():
     틀린문제표기 = "성공하지 못한 문제 표기할지 말지 선택합니다. 기본값은 False입니다."
  )
 async def today_command(interaction, baekjoon_id: str = None,틀린문제표기: bool = False):
-    print(f"{interaction.guild}(id:{interaction.guild_id}) 에서 {interaction.user}(id:{interaction.id}): {interaction.command.name}, ",end="")
-    print([f"{i['name']}: {i['value']}" for i in interaction.data["options"]])
+    print(f"{interaction.guild}에서 {interaction.user}: {interaction.data}")
     try:
         if baekjoon_id == None: #id가 입력되지 않으면 저장된 데이터에서 찾아봄
             find = get_user_value(interaction.user.id)
@@ -78,10 +77,51 @@ async def today_command(interaction, baekjoon_id: str = None,틀린문제표기:
         return
 
 
+@tree.command(name="출석", description="현재 연속 출석 일수와 최대 연속 출석 일수를 보여줍니다.",guild=guild)
+@app_commands.describe( 
+    baekjoon_id = "검색하고 싶은 백준 아이디를 입력합니다. /등록 기능을 이용하시면 매번 자신의 아이디를 입력할 필요가 없습니다.",
+ )
+async def today_command(interaction, baekjoon_id: str = None):
+    print(f"{interaction.guild}에서 {interaction.user}: {interaction.data}")
+    try:
+        if baekjoon_id == None: #id가 입력되지 않으면 저장된 데이터에서 찾아봄
+            find = get_user_value(interaction.user.id)
+            if find == None:
+                await interaction.response.send_message(embed = error_maker(2,interaction.user))
+                return
+            else:
+                baekjoon_id= find
+
+        if check_baekjoon_id(baekjoon_id) == False:
+            await interaction.response.send_message(embed = error_maker(1,baekjoon_id))
+            return
+        link = f"https://solved.ac/profile/{baekjoon_id}"
+        response = requests.get(link)
+        
+        if response.status_code == 200:
+            soup = BeautifulSoup(response.content, 'html.parser')
+            temp1 = soup.find_all("div","css-18g9mtb")[0]
+            temp2 = temp1.find_all("b")
+            current_strike = temp2[0].text
+            max_strike = temp2[1].text
+            print(temp1.find_all("rect"))
+            embed=discord.Embed(title=f"현재 {current_strike}일 연속 문제 풀이중!", description=f"아이디 : {baekjoon_id}",color=discord.Color.random())
+
+            await interaction.response.send_message(embed = embed)
+            return
+        elif response.status_code == 404:
+            await interaction.response.send_message(embed = error_maker(1,baekjoon_id))
+            return
+        
+    except Exception as e:
+        await interaction.response.send_message(embed = error_maker(3,e))
+        return
+
+
+
 @tree.command(name="등록", description="백준 아이디를 등록합니다. 이미 등록되어 있을 경우 새로운 값으로 업데이트됩니다.",guild=guild)
 async def baekjoon_id_register(interaction, baekjoon_id: str):
-    print(f"{interaction.guild}(id:{interaction.guild_id}) 에서 {interaction.user}(id:{interaction.id}): {interaction.command.name}, ",end="")
-    print([f"{i['name']}: {i['value']}" for i in interaction.data["options"]])
+    print(f"{interaction.guild}에서 {interaction.user}: {interaction.data}")
     try:
         if update_user_value(interaction.user.id,baekjoon_id) == None:
                 await interaction.response.send_message(embed = error_maker(1,baekjoon_id))
@@ -102,8 +142,7 @@ async def baekjoon_id_register(interaction, baekjoon_id: str):
     algorithm='알고리즘을 표시할지 말지 선택합니다. 기본값은 False입니다.'
  )
 async def 문제(interaction, id: str, tier: bool = False, algorithm: bool = False):
-    print(f"{interaction.guild}(id:{interaction.guild_id}) 에서 {interaction.user}(id:{interaction.id}): {interaction.command.name}, ",end="")
-    print([f"{i['name']}: {i['value']}" for i in interaction.data["options"]])
+    print(f"{interaction.guild}에서 {interaction.user}: {interaction.data}")
     try:
         file, embed = find_prob_by_id(id, tier, algorithm)
         await interaction.response.send_message(file=file, embed=embed)
@@ -121,8 +160,7 @@ async def 문제(interaction, id: str, tier: bool = False, algorithm: bool = Fal
     한국어 = "한국어 문제만 추천할지 선택합니다. 기본값은 True입니다."
  )
 async def 랜덤(interaction,범위: str,tier: bool = False, algorithm: bool = False,한국어: bool = True):
-    print(f"{interaction.guild}(id:{interaction.guild_id}) 에서 {interaction.user}(id:{interaction.id}): {interaction.command.name}, ",end="")
-    print([f"{i['name']}: {i['value']}" for i in interaction.data["options"]])
+    print(f"{interaction.guild}에서 {interaction.user}: {interaction.data}")
     try:
         범위 = 범위.replace(" ","")
         범위 = 범위.split(",")
