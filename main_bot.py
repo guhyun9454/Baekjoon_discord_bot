@@ -184,8 +184,6 @@ async def 랜덤(interaction,범위: str,tier: bool = False, algorithm: bool = F
 
 
 
-
-
 @client.event
 async def on_message(message):
     if message.author == client.user:
@@ -206,22 +204,25 @@ async def on_message(message):
                     return
                 else:
                     my_id= find
-                    딴놈_id = temp[1]
+                    your_id = temp[1]
             else:
                 my_id = temp[1]
-                딴놈_id = temp[2]
+                your_id = temp[2]
 
 
-            if my_id == 딴놈_id: #비교 대상이 같으면 꼽주기
+            if my_id == your_id: #비교 대상이 같으면 꼽주기
                 embed = discord.Embed(title=f"같은 아이디는 비교할 수 없습니다", description="다시 입력해주세요. ^^",color=error_red)
                 await message.channel.send(embed= embed)
                 return
             
-            if check_baekjoon_id(딴놈_id) == False:
-                await message.channel.send(embed=error_maker(1,딴놈_id))
+            if check_baekjoon_id(your_id) == False:
+                await message.channel.send(embed=error_maker(1,your_id))
+                return
+            if check_baekjoon_id(my_id) == False:
+                await message.channel.send(embed=error_maker(1,my_id))
                 return
             
-            embed = prob_compare(my_id,딴놈_id)
+            embed = prob_compare(my_id,your_id)
 
             await message.channel.send(embed=embed)
             return
