@@ -11,8 +11,8 @@ from user_check import *
 token = 'MTEzODc0MTk2NjkyMjg0NjIzOA.GWpSql.yaWRnXRgzVWPZeNVjZHpohdIpaGWoeZEBgTMGg'
 error_red = 0xf44336 
 noerror_green = 0x388e3c
-# guild=discord.Object(id=1110101899312631808)
-guild = None
+guild=discord.Object(id=1110101899312631808)
+# guild = None
 
 client = discord.Client(intents=discord.Intents.all())
 tree = app_commands.CommandTree(client)
@@ -23,8 +23,10 @@ def error_maker(error_type: int = 0,*args):
     0: 기본 에러
     1: 백준 아이디 존재 안함 , *args = (baekjoon_id,)
     2: 디스코드 식별번호에 대응하는 백준 아이디가 존재 하지 않음, *args = (interation.user,)
-    3: exception error, *args = (e,)
+    3: 코드 실행 에러 exception error, *args = (e,)
     4: 올바르지 않은 티어 범위 *args = (잘못된 범위,)
+    5: 크롤링 or api not found error *args = (e,)
+    6: 입력 형식 에러
     """
     if error_type == 0: 
         embed=discord.Embed(title=f"에러", description="에러가 발생했습니다.",color=error_red)
@@ -36,7 +38,11 @@ def error_maker(error_type: int = 0,*args):
         embed=discord.Embed(title=f"코드 오류", description=args[0],color=error_red)
     elif error_type == 4: 
         embed=discord.Embed(title=f"'{args[0]}' 은/는 올바른 범위가 아닙니다.", description="올바른 범위를 입력해 주세요.",color=error_red)
-    
+    elif error_type == 5:
+        embed=discord.Embed(title=f"404 NOT FOUND", description="데이터를 불러올 수 없습니다. 일시적인 문제일 수 있으니 다시 시도해주세요.\n"+args[0],color=error_red)
+    elif error_type == 6:
+        embed=discord.Embed(title=f"입력 형식이 올바르지 않습니다.", description="다시 입력해 주세요",color=error_red)
+
     return embed
 
 
@@ -167,6 +173,9 @@ async def 랜덤(interaction,범위: str,tier: bool = False, algorithm: bool = F
         범위 = tier_to_id(범위) #티어에 대응하는 id로 바꿈
         prob_id = rand_problem(범위) #범위 내에서 문제를 랜덤으로 뽑아옴
         file,embed = find_prob_by_id(prob_id,tier=tier,algorithm=algorithm) #문제를 출력함
+        interaction.response.defer()
+        asyncio.sleep()
+        interaction.followup.send()
         await interaction.response.send_message(file=file, embed=embed)
         return
     except Exception as e: 
@@ -174,59 +183,54 @@ async def 랜덤(interaction,범위: str,tier: bool = False, algorithm: bool = F
         return
 
 
+
+
+
 @client.event
 async def on_message(message):
     if message.author == client.user:
         return
-
-    # if message.content.startswith('/today'): #/today 명령어
-    #     print(message.author,", 명령어: today")
-    #     # try:
-        #     cmd = message.content.split()
-        #     if len(cmd) == 1: #user id가 입력되지 않으면
-        #         if message.author.id in user_data: #미리 저장된 디스코드 사용자 id 가 있는지 확인
-        #             baekjoon_id = user_data[message.author.id]
-        #         else: #데이터베이스에 없을 시 에러 출력
-        #             await message.channel.send("유저 id를 입력하세요!")
-        #     else:
-        #         baekjoon_id = cmd[1]
-        #     embed = today_baekjoon(baekjoon_id)
-        #     await message.channel.send(embed = embed)
-        # except Exception as e:
-        #     print(e)
-        #     await message.channel.send("사용자를 찾을 수 없습니다.")
-
-    # elif message.content.startswith("/문제"):
-    #     if message.content.split().__len__() == 1:
-    #         await message.channel.send("문제 번호를 입력하세요.")
-    #     else:
-    #         tier = False
-    #         algorithm = False
-    #         prob_num = message.content.replace("/문제","")
-    #         prob_num = prob_num.replace(" ","")
-    #         if "티어" in message.content:
-    #             tier = True
-    #             prob_num = prob_num.replace("티어","")
-    #         if "알고리즘" in message.content:
-    #             algorithm = True      
-    #             prob_num = prob_num.replace("알고리즘","")
-    #         file,embed = find_prob_by_id(prob_num,tier,algorithm)
-    #         await message.channel.send(file = file,embed=embed)
-
-    # elif message.content.startswith("/랜덤"):
-    #     try:
-    #         tier_list = message.content.replace("/랜덤","")
-    #         tier_list = tier_list.replace(" ","")
-    #         tier_list = tier_list.split(",")
-    #         tier_list = tier_to_id(tier_list)
-    #         file,embed = rand_problem(tier_list)
-    #         await message.channel.send(file = file,embed=embed)
-    #     except Exception as e:
-    #         await message.channel.send(str(e))
     
-    elif message.content.startswith("마법소녀GH99님"):
-        await message.channel.send(":emoji_1:")
+    elif message.content.startswith("/compare"): #실행 시간이 너무 오래 걸려서 slash command 사용 불가
+        print(f"{message.guild}에서 {message.author}: {message.content}")
+        try:
+            temp = message.content.split()
+            if len(temp) != 3 and len(temp) != 2:
+                await message.channel.send(embed=error_maker(6))
+                return
+        
+            if len(temp) == 2: #id가 입력되지 않으면 저장된 데이터에서 찾아봄
+                find = get_user_value(message.author.id)
+                if find == None:
+                    await message.channel.send(embed=error_maker(2,message.author))
+                    return
+                else:
+                    my_id= find
+                    딴놈_id = temp[1]
+            else:
+                my_id = temp[1]
+                딴놈_id = temp[2]
+
+
+            if my_id == 딴놈_id: #비교 대상이 같으면 꼽주기
+                embed = discord.Embed(title=f"같은 아이디는 비교할 수 없습니다", description="다시 입력해주세요. ^^",color=error_red)
+                await message.channel.send(embed= embed)
+                return
+            
+            if check_baekjoon_id(딴놈_id) == False:
+                await message.channel.send(embed=error_maker(1,딴놈_id))
+                return
+            
+            embed = prob_compare(my_id,딴놈_id)
+
+            await message.channel.send(embed=embed)
+            return
+
+        except Exception as e:
+            await message.channel.send(embed = error_maker(3,e))
+            return
     
+
     elif message.content.startswith("/언어"):
         try:
             id = message.content.replace("/언어","")

@@ -47,7 +47,7 @@ def update_user_value(user_id, new_value):
 
 def check_baekjoon_id(baekjoon_id):
     link = "https://www.acmicpc.net/user/" + baekjoon_id
-    if baekjoon(link).find("span","error-v1-title"): #아이디 존재 안하면 false 을 return
+    if request(link).find("span","error-v1-title"): #아이디 존재 안하면 false 을 return
         return False
     else:
         return True

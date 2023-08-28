@@ -6,6 +6,7 @@ from datetime import datetime
 from datetime import timedelta
 import random
 import os
+from get_data import *
 
 tier_data = {0: ['Unrated'], 1: ['Bronze', 'V'], 2: ['Bronze', 'IV'], 3: ['Bronze', 'III'], 4: ['Bronze', 'II'], 
              5: ['Bronze', 'I'], 6: ['Silver', 'V'], 7: ['Silver', 'IV'], 8: ['Silver', 'III'], 9: ['Silver', 'II'], 
@@ -79,7 +80,6 @@ def today_baekjoon(id: str,틀린문제표기): #백준 아이디를 입력받�
         return embed
     
 def find_prob_by_id(prob_id,tier=False,algorithm=False): #솔브닥 api 이용
-    print(prob_id+"번 검색됨")
     try:
         url = 'https://solved.ac/api/v3/problem/show?problemId='+prob_id
         link = "https://www.acmicpc.net/problem/"+prob_id
@@ -128,8 +128,8 @@ possible_tier = {'b': ['1', '2', '3', '4', '5'], 'b5': ['1'], 'b4': ['2'], 'b3':
 def tier_to_id(tier_list): #["s1","s2","g5","g4"] --> ["9","10","11","12"]
     new_list = []
     for i in tier_list:
-        if i not in possible_tier:
-            raise Exception("올바른 범위를 입력하세요. (ERROR: "+str(i)+")")
+        if i.lower() not in possible_tier:
+            raise Exception(str(i))
         else:
             new_list.extend(possible_tier[i])
     return list(set(new_list))
@@ -157,7 +157,7 @@ def rand_problem(tier_list):
     #해당 페이지에서 랜덤으로 문제를 뽑는다
 
     final_rand_problem = soup.find_all("tr")[rand_problem-1].find("td","list_problem_id").text
-    return find_prob_by_id(final_rand_problem)  #혹여나 아무 값이 없어도 다음 함수에서 404에러가 뜬다
+    return final_rand_problem #문제 번호
 
 def baekjoon_top3_language(id: str):
     top3 = []
@@ -176,7 +176,43 @@ def baekjoon_top3_language(id: str):
         i[1] = str(round(int(i[1])/sum*100,1))+"%"
     return top3
 
+def prob_compare(my_id,your_id):
+    my_list = request("https://www.acmicpc.net/user/"+my_id).find("div","problem-list").find_all("a")
+    your_list = request("https://www.acmicpc.net/user/"+your_id).find("div","problem-list").find_all("a")
+    my_set = set([i.text for i in my_list])
+    your_set = set([i.text for i in your_list])
+    sub_set = your_set-my_set
+    diff_count = len(sub_set)
 
+    if diff_count > 100:
+        temp1 = your_id + "님은 신입니다!"
+        temp2 = your_id+"님은 " +my_id+"님이 풀지 못한 " +str(diff_count)+"개의 문제들을 더 풀었습니다.\n너무 차이가 많이 나서 차집합에서 랜덤으로 100개를 뽑은 후 정렬을 시도하겠습니다.\n"
+        embed = discord.Embed(title = temp1, description = temp2, url="", color=discord.Color.random())
+    else:
+        temp = your_id+"님은 " +my_id+"님이 풀지 못한 " +str(diff_count)+"개의 문제들을 더 풀었습니다.\n"
+        embed=discord.Embed(title = "저놈도 풀었는데 ㅋㅋ 얼른 풀어야겠지?", description = temp,color=discord.Color.random())
+
+    id_string = ",".join(list(sub_set)[:100])
+
+    url = "https://solved.ac/api/v3/problem/lookup"
+
+    querystring = {"problemIds":id_string}
+
+    headers = {"Accept": "application/json"}
+
+    response = requests.get(url, headers=headers, params=querystring)
+
+    data = response.json()
+
+    sorted_data = sorted(data, key=lambda x: x["level"])
+    sorted_data = sorted_data[:10]     # level이 작은 순서대로 10개의 항목 추출
+
+    for item in sorted_data:
+        temp1 = str(item["problemId"]) +" - "+ item["titleKo"]
+        temp2 = "["+temp1+"](https://www.acmicpc.net/problem/"+str(item["problemId"])+")"
+        embed.add_field(name = " ".join(tier_data[item["level"]]), value = temp2, inline = False)
+    
+    return embed
 
 
     
