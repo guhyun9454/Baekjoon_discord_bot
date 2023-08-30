@@ -4,6 +4,7 @@ from discord import app_commands
 import requests
 from bs4 import BeautifulSoup
 import asyncio
+import time
 #만든 함수
 from functions import *
 from user_check import *
@@ -174,9 +175,6 @@ async def 랜덤(interaction,범위: str,tier: bool = False, algorithm: bool = F
         범위 = tier_to_id(범위) #티어에 대응하는 id로 바꿈
         prob_id = rand_problem(범위) #범위 내에서 문제를 랜덤으로 뽑아옴
         file,embed = find_prob_by_id(prob_id,tier=tier,algorithm=algorithm) #문제를 출력함
-        interaction.response.defer()
-        asyncio.sleep()
-        interaction.followup.send()
         await interaction.response.send_message(file=file, embed=embed)
         return
     except Exception as e: 
@@ -232,16 +230,25 @@ async def on_message(message):
             await message.channel.send(embed = error_maker(3,e))
             return
         
+
     elif message.content.startswith("/실검"):
         try:
+            start = time.time()
             print(f"{message.guild}에서 {message.author}: {message.content}")
+            wait_message = await message.channel.send("실시간 검색어를 가져오는 중입니다. 잠시만 기다려주세요...")
             temp = get_실검()
             embed=discord.Embed(title="실시간 검색어",description=temp[0]+" 기준",color=discord.Color.random())
             for i in range(1,11):
-                embed.add_field(name=str(i)+". "+temp[i], value="몰라", inline=False)
+                embed.add_field(name=str(i)+". "+temp[i], value=f"[네이버 뉴스](https://search.naver.com/search.naver?where=news&sm=tab_jum&query={temp[i].replace(' ','%20')})", inline=False)
+            await wait_message.delete() 
+            end = time.time()
+            embed.set_footer(text=f"불러오는 데 {round(end-start,2)}초가 걸렸습니다.")
             await message.channel.send(embed=embed)
+
         except Exception as e:
+            await wait_message.delete() 
             await message.channel.send(embed = error_maker(3,e))
+
         
         
 
