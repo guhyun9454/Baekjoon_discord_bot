@@ -7,12 +7,13 @@ import asyncio
 #만든 함수
 from functions import *
 from user_check import *
+from get_real_time_search import *
 
 token = 'MTEzODc0MTk2NjkyMjg0NjIzOA.GWpSql.yaWRnXRgzVWPZeNVjZHpohdIpaGWoeZEBgTMGg'
 error_red = 0xf44336 
 noerror_green = 0x388e3c
-guild=discord.Object(id=1110101899312631808)
-# guild = None
+# guild=discord.Object(id=1110101899312631808)
+guild = None
 
 client = discord.Client(intents=discord.Intents.all())
 tree = app_commands.CommandTree(client)
@@ -230,6 +231,20 @@ async def on_message(message):
         except Exception as e:
             await message.channel.send(embed = error_maker(3,e))
             return
+        
+    elif message.content.startswith("/실검"):
+        try:
+            print(f"{message.guild}에서 {message.author}: {message.content}")
+            temp = get_실검()
+            embed=discord.Embed(title="실시간 검색어",description=temp[0]+" 기준",color=discord.Color.random())
+            for i in range(1,11):
+                embed.add_field(name=str(i)+". "+temp[i], value="몰라", inline=False)
+            await message.channel.send(embed=embed)
+        except Exception as e:
+            await message.channel.send(embed = error_maker(3,e))
+        
+        
+
     
 
     elif message.content.startswith("/언어"):
