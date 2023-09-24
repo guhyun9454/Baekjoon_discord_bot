@@ -204,8 +204,8 @@ def prob_compare(my_id,your_id):
 
     data = response.json()
 
-    sorted_data = sorted(data, key=lambda x: x["level"])
-    sorted_data = sorted_data[:10]     # level이 작은 순서대로 10개의 항목 추출
+    sorted_data = sorted(data, key=lambda x: x["level"],reverse=True)
+    sorted_data = sorted_data[:10]     # level이 큰 순서대로 10개의 항목 추출
 
     for item in sorted_data:
         temp1 = str(item["problemId"]) +" - "+ item["titleKo"]

@@ -8,7 +8,7 @@ import time
 #만든 함수
 from functions import *
 from user_check import *
-from get_real_time_search import *
+from selenium_crawling import *
 
 token = 'MTEzODc0MTk2NjkyMjg0NjIzOA.GWpSql.yaWRnXRgzVWPZeNVjZHpohdIpaGWoeZEBgTMGg'
 error_red = 0xf44336 
@@ -182,7 +182,6 @@ async def 랜덤(interaction,범위: str,tier: bool = False, algorithm: bool = F
         return
 
 
-
 @client.event
 async def on_message(message):
     if message.author == client.user:
@@ -249,6 +248,42 @@ async def on_message(message):
             await wait_message.delete() 
             await message.channel.send(embed = error_maker(3,e))
 
+
+    elif message.content.startswith("/학식"):
+        try:
+            start = time.time()
+            print(f"{message.guild}에서 {message.author}: {message.content}")
+            wait_message = await message.channel.send("학식을 가져오는 중입니다. 잠시만 기다려주세요...")
+
+            if message.author.id == 520202815776227348 or message.author.id == 771879794681577482:
+                embed=discord.Embed(title="오늘의 학식",description="누리관 식단표",color=discord.Color.random())
+                menu = get_학식_경북대()
+            else: #경희대
+                embed=discord.Embed(title="오늘의 학식",description="제2기숙사 식단표",color=discord.Color.random())
+                menu = get_학식_경희대()
+            
+            if menu[0] == "":
+                embed.add_field(name="아침", value="굶으세요", inline=False)
+            else:
+                embed.add_field(name="아침", value=menu[0], inline=False)
+            if menu[1] == "":
+                embed.add_field(name="점심", value="굶으세요", inline=False)
+            else:
+                embed.add_field(name="점심", value=menu[1], inline=False)
+            if menu[2] == "":
+                embed.add_field(name="저녁", value="굶으세요", inline=False)
+            else:
+                embed.add_field(name="저녁", value=menu[2], inline=False)
+
+            await wait_message.delete() 
+            end = time.time()
+            embed.set_footer(text=f"불러오는 데 {round(end-start,2)}초가 걸렸습니다.")
+            await message.channel.send(embed=embed)
+
+        except Exception as e:
+            await wait_message.delete() 
+            await message.channel.send(embed = error_maker(3,e))
+
         
         
 
@@ -277,5 +312,11 @@ async def on_message(message):
         embed.add_field(name="스트라이크", value="연속 23일", inline=True)
         await message.channel.send(embed = embed)
 
+    elif message.content.startswith("대답"):
+        start_time = time.time()
+        ping_message = await message.channel.send("핑을 측정 중입니다...")
+        end_time = time.time()
+        ping = round((end_time - start_time) * 1000)
+        await ping_message.edit(content=f"넵! 핑: {ping}ms")
 
 client.run(token)
