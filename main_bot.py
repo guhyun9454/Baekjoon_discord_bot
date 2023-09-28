@@ -180,7 +180,23 @@ async def 랜덤(interaction,범위: str,tier: bool = False, algorithm: bool = F
     except Exception as e: 
         await interaction.response.send_message(embed = error_maker(4,str(e)))
         return
+    
 
+
+@client.event
+async def on_voice_state_update(member, before, after):
+    if member.guild.id == 1121413696338534480: #이 서버에 있을 때
+        if before.channel is None and after.channel:
+            text = f"@everyone\n{member.mention}님이 공부를 시작하였습니다!\n\n 거기 놀고있는 당신, 공부해야겠지?"
+            
+            target_text_channel_id = 1155872655472332920  # 메시지를 보낼 텍스트 채널
+
+            # 텍스트 채널에 메시지 보내기
+            target_text_channel = client.get_channel(target_text_channel_id)
+            if target_text_channel:
+                await target_text_channel.send(text,allowed_mentions= discord.AllowedMentions(everyone = True))
+            else:
+                print(f'채널을 찾을 수 없습니다: {target_text_channel_id}')
 
 @client.event
 async def on_message(message):
