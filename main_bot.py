@@ -186,7 +186,8 @@ async def 랜덤(interaction,범위: str,tier: bool = False, algorithm: bool = F
 @client.event
 async def on_voice_state_update(member, before, after):
     if member.guild.id == 1121413696338534480: #이 서버에 있을 때
-        if before.channel is None and after.channel:
+        print(after)
+        if (before.channel is None and after.channel ) and not( after.channel.id == 1165291806817259520):
             text = f"@everyone\n{member.mention}님이 공부를 시작하였습니다!\n\n 거기 놀고있는 당신, 공부해야겠지?"
             
             target_text_channel_id = 1155872655472332920  # 메시지를 보낼 텍스트 채널
