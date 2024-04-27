@@ -10,7 +10,6 @@ from functions import *
 from user_check import *
 from selenium_crawling import *
 
-token = 'MTEzODc0MTk2NjkyMjg0NjIzOA.GWpSql.yaWRnXRgzVWPZeNVjZHpohdIpaGWoeZEBgTMGg'
 error_red = 0xf44336 
 noerror_green = 0x388e3c
 # guild=discord.Object(id=1110101899312631808)
